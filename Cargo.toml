@@ -1,0 +1,8 @@
+[package]
+name = "closed_loop_firmware_demo"
+version = "0.1.0"
+authors = ["Boris Vinogradov <no111u3@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+aux = { path = "auxiliary" }
