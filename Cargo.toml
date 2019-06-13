@@ -5,4 +5,13 @@ authors = ["Boris Vinogradov <no111u3@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-aux = { path = "auxiliary" }
+serialio = "0.1.2"
+cortex-m = "0.5.7"
+cortex-m-rt = "0.6.5"
+cortex-m-semihosting = "0.3.1"
+panic-semihosting = "0.5.0"
+stm32f30x-hal = "0.2.0"
+
+[dependencies.f3]
+features = ["rt"]
+version = "0.6.1"

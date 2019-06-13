@@ -3,49 +3,34 @@
 #![no_main]
 #![no_std]
 
-use core::fmt::{self, Write};
+extern crate panic_semihosting;
 
-#[allow(unused_imports)]
-use aux::{entry, iprint, iprintln, usart1};
+use stm32f30x_hal::{prelude::*, serial::Serial};
+use serialio::{SerialIO, sprintln};
+use cortex_m_rt::entry;
 
-macro_rules! uprint {
-    ($serial:expr, $($arg:tt)*) => {
-        $serial.write_fmt(format_args!($($arg)*)).ok()
-    };
-}
-
-macro_rules! uprintln {
-    ($serial:expr, $fmt:expr) => {
-        uprint!($serial, concat!($fmt, "\n"))
-    };
-    ($serial:expr, $fmt:expr, $($arg:tt)*) => {
-        uprint!($serial, concat!($fmt, "\n"), $($arg)*)
-    };
-}
-
-struct SerialPort {
-    usart1: &'static mut usart1::RegisterBlock,
-}
-
-impl fmt::Write for SerialPort {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        for byte in s.bytes() {
-            // wait until it's safe to write to TDR
-            while self.usart1.isr.read().txe().bit_is_clear() {}
-
-            self.usart1.tdr.write(|w| w.tdr().bits(u16::from(byte)));
-        }
-        Ok(())
-    }
-}
+use f3::hal::stm32f30x;
 
 #[entry]
 fn main() -> ! {
-    let (usart1, mono_timer, mut itm) = aux::init();
+    let p = stm32f30x::Peripherals::take().unwrap();
 
-    let mut serial = SerialPort { usart1 };
-    
-    uprintln!(serial, "Startup firmware complete");
+    let mut flash = p.FLASH.constrain();
+    let mut rcc = p.RCC.constrain();
+    let mut gpioc = p.GPIOC.split(&mut rcc.ahb);
+
+    let clocks = rcc.cfgr.freeze(&mut flash.acr);
+
+    let tx = gpioc.pc4.into_af7(&mut gpioc.moder, &mut gpioc.afrl);
+    let rx = gpioc.pc5.into_af7(&mut gpioc.moder, &mut gpioc.afrl);
+
+    let serial = Serial::usart1(p.USART1, (tx, rx), 115_200.bps(), clocks, &mut rcc.apb2);
+
+    let (tx, rx) = serial.split();
+
+    let mut in_out = SerialIO::new(tx, rx);
+
+    sprintln!(in_out, "Startup firmware complete");
 
     loop {}
 }
