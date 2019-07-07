@@ -5,28 +5,26 @@
 
 extern crate panic_semihosting;
 
-use stm32f30x_hal::{prelude::*, serial::Serial};
+use stm32f4xx_hal::{stm32, prelude::*, serial::{Serial, config}};
 use serialio::{SerialIO, sprintln};
 use cortex_m_rt::entry;
 
-use f3::hal::stm32f30x;
-
 #[entry]
 fn main() -> ! {
-    let p = stm32f30x::Peripherals::take().unwrap();
+    let p = stm32::Peripherals::take().unwrap();
 
-    let mut flash = p.FLASH.constrain();
-    let mut rcc = p.RCC.constrain();
-    let mut gpioc = p.GPIOC.split(&mut rcc.ahb);
+    let rcc = p.RCC.constrain();
+    let gpioa = p.GPIOA.split();
 
-    let clocks = rcc.cfgr.freeze(&mut flash.acr);
+    let clocks = rcc.cfgr.freeze();
 
-    let tx = gpioc.pc4.into_af7(&mut gpioc.moder, &mut gpioc.afrl);
-    let rx = gpioc.pc5.into_af7(&mut gpioc.moder, &mut gpioc.afrl);
+    let tx = gpioa.pa9.into_alternate_af7();
+    let rx = gpioa.pa10.into_alternate_af7();
 
-    let serial = Serial::usart1(p.USART1, (tx, rx), 115_200.bps(), clocks, &mut rcc.apb2);
+    let conf = config::Config::default();
+    let serial = Serial::usart1(p.USART1, (tx, rx), conf.baudrate(115_200.bps()), clocks);
 
-    let (tx, rx) = serial.split();
+    let (tx, rx) = serial.unwrap().split();
 
     let mut in_out = SerialIO::new(tx, rx);
 
