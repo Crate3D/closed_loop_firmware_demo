@@ -5,5 +5,5 @@ cache: cargo
 matrix:
   fast_finish: true
 script:
-  - rustup target add thumbv7m-none-eabi
+  - rustup target add thumbv7em-none-eabihf
   - cargo build
