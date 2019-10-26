@@ -5,30 +5,45 @@
 
 extern crate panic_semihosting;
 
-use stm32f4xx_hal::{stm32, prelude::*, serial::{Serial, config}};
-use serialio::{SerialIO, sprintln};
-use cortex_m_rt::entry;
+use serialio::{sprintln, SerialIO};
+use stm32f4xx_hal::{
+    prelude::*,
+    serial::{config, Serial},
+    stm32,
+};
 
-#[entry]
-fn main() -> ! {
-    let p = stm32::Peripherals::take().unwrap();
+use cortex_m::asm::wfi;
+use rtfm::app;
 
-    let rcc = p.RCC.constrain();
-    let gpioa = p.GPIOA.split();
+#[app(device = stm32f4xx_hal::stm32)]
+const APP: () = {
+    #[init]
+    fn init() {
+        let p = stm32::Peripherals::take().unwrap();
 
-    let clocks = rcc.cfgr.freeze();
+        let rcc = p.RCC.constrain();
+        let gpioa = p.GPIOA.split();
 
-    let tx = gpioa.pa9.into_alternate_af7();
-    let rx = gpioa.pa10.into_alternate_af7();
+        let clocks = rcc.cfgr.freeze();
 
-    let conf = config::Config::default();
-    let serial = Serial::usart1(p.USART1, (tx, rx), conf.baudrate(115_200.bps()), clocks);
+        let tx = gpioa.pa9.into_alternate_af7();
+        let rx = gpioa.pa10.into_alternate_af7();
 
-    let (tx, rx) = serial.unwrap().split();
+        let conf = config::Config::default();
+        let serial = Serial::usart1(p.USART1, (tx, rx), conf.baudrate(115_200.bps()), clocks);
 
-    let mut in_out = SerialIO::new(tx, rx);
+        let (tx, rx) = serial.unwrap().split();
 
-    sprintln!(in_out, "Startup firmware complete");
+        let mut in_out = SerialIO::new(tx, rx);
 
-    loop {}
-}
+        sprintln!(in_out, "Startup firmware complete");
+    }
+
+    #[idle]
+    fn idle() -> ! {
+        loop {
+            // Waits for interrupt
+            wfi();
+        }
+    }
+};
