@@ -2,8 +2,11 @@ language: rust
 rust:
   - stable
 cache: cargo
+env:
+- BOARD=f103
+- BOARD=f412
 matrix:
   fast_finish: true
 script:
   - rustup target add thumbv7em-none-eabihf
-  - cargo build
+  - cargo build --features=$BOARD
