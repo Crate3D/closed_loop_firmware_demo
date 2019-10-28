@@ -5,17 +5,34 @@ authors = ["Boris Vinogradov <no111u3@gmail.com>", "Alexey Shvetsov <alexxyum@gm
 edition = "2018"
 
 [dependencies]
-serialio = "0.1.2"
-cortex-m = "0.5.7"
-cortex-m-rt = "0.6.5"
-cortex-m-semihosting = "0.3.1"
-panic-semihosting = "0.5.0"
+serialio = "0.1"
+cortex-m = "0.5"
+cortex-m-rt = "0.6"
+cortex-m-semihosting = "0.3"
+panic-semihosting = "0.5"
 cortex-m-rtfm = "0.4"
+
+[features]
+default = []
+f412 = ["stm32f4xx-hal/stm32f412"]
+f103 = ["stm32f1xx-hal/stm32f103"]
 
 [dependencies.stm32f4xx-hal]
 features = ["stm32f412", "rt"]
-version = "0.5.0"
+version = "0.5"
+optional = true
 
 [dependencies.stm32f4]
 features = ["stm32f412", "rt"]
-version = "0.7.0"
+version = "0.7"
+optional = true
+
+[dependencies.stm32f1xx-hal]
+version = "0.4"
+features = ["stm32f103", "rt"]
+optional = true
+
+[dependencies.stm32f1]
+features = ["stm32f103", "rt"]
+version = "0.8"
+optional = true
